@@ -1,49 +1,57 @@
-module.exports = function (test, TransformArrayLikeIterable) {
-    const array = Object.freeze([1, 2, 3, 4, 5])
+module.exports = function (test, params) {
+    const {
+        TransformIterable,
+        fromOneToFive,
+        twoOneFiveFourThree
+    } = params
 
     test('takeWhile', function (t) {
-        t.test('empty array', function (st) {
-            const iterable = new TransformArrayLikeIterable([])
+        t.test('empty iterable', function (st) {
+            const result = new TransformIterable([])
                 .takeWhile(() => true)
-            st.deepEqual([...iterable], [],
+
+            st.deepEqual([...result], [],
                 'must return an empty iterable')
             st.end()
         })
         t.test('takeWhile some values', function (st) {
-            const iterable = new TransformArrayLikeIterable([2, 1, 5, 4, 3])
+            const result = new TransformIterable(twoOneFiveFourThree)
                 .takeWhile(e => e % 2 === 0)
+
             const expected = [2]
-            st.deepEqual([...iterable], expected,
+            st.deepEqual([...result], expected,
                 'must iterate over the values while the predicate returns true')
             st.end()
         })
         t.test('takeWhile all', function (st) {
-            const otherArray = [2, 1, 5, 4, 3]
-            const iterable = new TransformArrayLikeIterable(otherArray)
+            const result = new TransformIterable(twoOneFiveFourThree)
                 .takeWhile(e => e <= 5)
-            st.deepEqual([...iterable], otherArray,
+
+            const expected = [...twoOneFiveFourThree]
+            st.deepEqual([...result], expected,
                 'must take all of values')
             st.end()
         })
         t.test('takeWhile any', function (st) {
-            const iterable = new TransformArrayLikeIterable([2, 1, 5, 4, 3])
+            const result = new TransformIterable(twoOneFiveFourThree)
                 .takeWhile(e => e > 5)
-            st.deepEqual([...iterable], [],
+
+            st.deepEqual([...result], [],
                 'must not takeWhile any value')
             st.end()
         })
         t.test('chaining', function (st) {
-            const iterable = new TransformArrayLikeIterable(array) // (1 2 3 4 5)
+            const result = new TransformIterable(fromOneToFive) // (1 2 3 4 5)
                 .takeWhile(e => e !== 5) // (1 2 3 4)
                 .takeWhile(e => e !== 4) // (1 2 3)
                 .takeWhile(e => e <= 2) // (1 2)
-            st.deepEqual([...iterable], [1, 2],
+            st.deepEqual([...result], [1, 2],
                 'must return the correct value')
             st.end()
         })
 
         t.test('using intermediate iterables', function (st) {
-            const intermediate = new TransformArrayLikeIterable(array)
+            const intermediate = new TransformIterable(fromOneToFive)
                 .takeWhile(e => e !== 4) // (1 2 3)
             const first = intermediate
                 .takeWhile(e => e <= 2) // (1 2)

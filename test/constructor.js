@@ -1,29 +1,30 @@
-module.exports = function (test, TransformArrayLikeIterable) {
-    const array = Object.freeze([1, 2, 3, 4, 5])
+module.exports = function (test, params) {
+    const {TransformIterable} = params
+    const iterable = params.fromOneToFive
 
     test('constructor', function (t) {
-        t.test('empty array', function (st) {
-            const iterable = new TransformArrayLikeIterable([])
-            st.deepEqual([...iterable], [],
+        t.test('empty iterable', function (st) {
+            const result = new TransformIterable([])
+            st.deepEqual([...result], [],
                 'must return an empty iterable')
             st.end()
         })
-        t.test('non-empty array', function (st) {
-            const iterable = new TransformArrayLikeIterable(array)
-            st.deepEqual([...iterable], array,
+        t.test('non-empty iterable', function (st) {
+            const result = new TransformIterable(iterable)
+            st.deepEqual([...result], [...iterable],
                 'must return an iterable with the same values')
             st.end()
         })
 
         t.test('empty string', function (st) {
-            const iterable = new TransformArrayLikeIterable('')
-            st.deepEqual([...iterable], [],
+            const result = new TransformIterable('')
+            st.deepEqual([...result], [],
                 'must return an empty iterable')
             st.end()
         })
-        t.test('non-empty typed array', function (st) {
-            const iterable = new TransformArrayLikeIterable(new Int8Array(array))
-            st.deepEqual([...iterable], array,
+        t.test('non-empty typed iterable', function (st) {
+            const result = new TransformIterable(new Int8Array(iterable))
+            st.deepEqual([...result], [...iterable],
                 'must return an iterable with the same values')
             st.end()
         })

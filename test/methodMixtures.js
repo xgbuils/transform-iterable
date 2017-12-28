@@ -1,9 +1,10 @@
-module.exports = function (test, TransformIterable) {
-    const array = Object.freeze([1, 2, 3, 4, 5])
+module.exports = function (test, params) {
+    const {TransformIterable} = params
+    const numberIterable = params.fromOneToFive
 
     test('map & filter', function (t) {
         t.test('map, then filter', function (st) {
-            const intermediate = new TransformIterable(array)
+            const intermediate = new TransformIterable(numberIterable)
                 .map(e => 2 * e) // (2 4 6 8 10)
             const first = intermediate
                 .filter(e => e <= 6) // (2 4 6)
@@ -16,7 +17,7 @@ module.exports = function (test, TransformIterable) {
             st.end()
         })
         t.test('filter, then map', function (st) {
-            const intermediate = new TransformIterable(array)
+            const intermediate = new TransformIterable(numberIterable)
                 .filter(e => e > 2) // (3 4 5)
             const first = intermediate
                 .map(e => 2 * e) // (6 8 10)
@@ -33,7 +34,7 @@ module.exports = function (test, TransformIterable) {
 
     test('map & dropWhile', function (t) {
         t.test('dropWhile, then map, then dropWhile', function (st) {
-            const iterable = new TransformIterable(array) // (1 2 3 4 5)
+            const iterable = new TransformIterable(numberIterable) // (1 2 3 4 5)
                 .dropWhile(e => e < 2) // (2 3 4 5)
                 .map(e => 2 * e) // (4 6 8 10)
                 .dropWhile(e => e < 8) // (8 10)
@@ -48,7 +49,7 @@ module.exports = function (test, TransformIterable) {
 
     test('map & takeWhile', function (t) {
         t.test('takeWhile, then map, then takeWhile', function (st) {
-            const iterable = new TransformIterable(array) // (1 2 3 4 5)
+            const iterable = new TransformIterable(numberIterable) // (1 2 3 4 5)
                 .takeWhile(e => e < 4) // (1 2 3)
                 .map(e => 2 * e) // (2 4 6)
                 .takeWhile(e => e < 6) // (2 4)
@@ -63,7 +64,7 @@ module.exports = function (test, TransformIterable) {
 
     test('slice with map & filter', function (t) {
         t.test('slice, then map, then slice', function (st) {
-            const iterable = new TransformIterable(array) // (1 2 3 4 5)
+            const iterable = new TransformIterable(numberIterable) // (1 2 3 4 5)
                 .slice(1, 4) // (2 3 4)
                 .map(e => 2 * e) // (4 6 8)
                 .slice(1, 2) // (6)
@@ -74,7 +75,7 @@ module.exports = function (test, TransformIterable) {
             st.end()
         })
         t.test('slice, then filter, then slice', function (st) {
-            const iterable = new TransformIterable(array) // (1 2 3 4 5)
+            const iterable = new TransformIterable(numberIterable) // (1 2 3 4 5)
                 .slice(0, 4) // (1 2 3 4)
                 .filter(e => e !== 2) // (1 3 4)
                 .slice(1, 2) // (3)

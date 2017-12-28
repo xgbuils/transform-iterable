@@ -141,19 +141,17 @@ function initDrop (n) {
 }
 
 function initTake (n) {
-    const length = Math.max(n, 0)
     return {
         start: 0,
-        length: Math.min(length, this.iterable.length)
+        length: Math.max(n, 0)
     }
 }
 
 function initSlice (start, end) {
     start = Math.max(start, 0)
-    const length = Math.max(end - start, 0)
     return {
         start,
-        length: Math.min(length, this.iterable.length - start)
+        length: Math.max(end - start, 0)
     }
 }
 

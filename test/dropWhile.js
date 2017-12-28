@@ -1,49 +1,53 @@
-module.exports = function (test, TransformArrayLikeIterable) {
-    const array = Object.freeze([1, 2, 3, 4, 5])
+module.exports = function (test, params) {
+    const {
+        TransformIterable,
+        fromOneToFive,
+        twoOneFiveFourThree,
+        oneFiveFourThree
+    } = params
 
     test('dropWhile', function (t) {
         t.test('empty array', function (st) {
-            const iterable = new TransformArrayLikeIterable([])
+            const result = new TransformIterable([])
                 .dropWhile(() => true)
-            st.deepEqual([...iterable], [],
+            st.deepEqual([...result], [],
                 'must return an empty iterable')
             st.end()
         })
         t.test('dropWhile some values', function (st) {
-            const iterable = new TransformArrayLikeIterable([2, 1, 5, 4, 3])
+            const result = new TransformIterable(twoOneFiveFourThree)
                 .dropWhile(e => e % 2 === 0)
-            const expected = [1, 5, 4, 3]
-            st.deepEqual([...iterable], expected,
+            const expected = oneFiveFourThree
+            st.deepEqual([...result], [...expected],
                 'must iterate over the values while the predicate returns true')
             st.end()
         })
         t.test('dropWhile all', function (st) {
-            const iterable = new TransformArrayLikeIterable([2, 1, 5, 4, 3])
+            const result = new TransformIterable(twoOneFiveFourThree)
                 .dropWhile(e => e <= 5)
-            st.deepEqual([...iterable], [],
+            st.deepEqual([...result], [],
                 'must take all of values')
             st.end()
         })
         t.test('dropWhile any', function (st) {
-            const otherArray = [2, 1, 5, 4, 3]
-            const iterable = new TransformArrayLikeIterable(otherArray)
+            const result = new TransformIterable(twoOneFiveFourThree)
                 .dropWhile(e => e > 5)
-            st.deepEqual([...iterable], otherArray,
+            st.deepEqual([...result], [...twoOneFiveFourThree],
                 'must not dropWhile any value')
             st.end()
         })
         t.test('chaining', function (st) {
-            const iterable = new TransformArrayLikeIterable(array) // (1 2 3 4 5)
+            const result = new TransformIterable(fromOneToFive) // (1 2 3 4 5)
                 .dropWhile(e => e === 1) // (2 3 4 5)
                 .dropWhile(e => e === 2) // (3 4 5)
                 .dropWhile(e => e <= 2) // (3 4 5)
-            st.deepEqual([...iterable], [3, 4, 5],
+            st.deepEqual([...result], [3, 4, 5],
                 'must return the correct value')
             st.end()
         })
 
         t.test('using intermediate iterables', function (st) {
-            const intermediate = new TransformArrayLikeIterable(array)
+            const intermediate = new TransformIterable(fromOneToFive)
                 .dropWhile(e => e !== 3) // (3 4 5)
             const first = intermediate
                 .dropWhile(e => e <= 2) // (3 4 5)
