@@ -16,7 +16,7 @@ const fns = {
         done
     }),
 
-    filter: f => () => s => f(s.value) ? s : undefined,
+    filter: f => () => s => s.done || f(s.value) ? s : undefined,
 
     take,
 
@@ -29,18 +29,18 @@ const fns = {
     },
 
     dropWhile: f => (dropping = true) => {
-        return s => dropping && f(s.value) ? undefined : (dropping = false, s)
+        return s => dropping && !s.done && f(s.value) ? undefined : (dropping = false, s)
     }
 }
 
 function TransformIterable (iterable) {
     this.iterable = iterable
-    this.fn = () => s => s
 }
 
 function methodGenerator (methodName) {
     return function (...args) {
-        const fn = iterCompose2(fns[methodName](...args), this.fn)
+        const g = fns[methodName](...args)
+        const fn = this.fn ? iterCompose2(g, this.fn) : g
         const obj = Object.create(this.constructor.prototype)
         obj.fn = fn
         obj.iterable = this.iterable
@@ -73,6 +73,9 @@ Object.defineProperties(TransformIterable.prototype, {
     [Symbol.iterator]: {
         value () {
             const iterator = this.iterable[Symbol.iterator]()
+            if (!this.fn) {
+                return iterator
+            }
             const fn = this.fn()
             return {
                 next () {
