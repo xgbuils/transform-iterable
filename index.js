@@ -71,17 +71,19 @@ Object.defineProperties(TransformIterable.prototype, {
         value: methodGenerator('takeWhile')
     },
     [Symbol.iterator]: {
-        * value () {
+        value () {
             const iterator = this.iterable[Symbol.iterator]()
             const fn = this.fn()
-            while (true) {
-                const status = fn(iterator.next())
-                if (!status) {
-                    continue
-                } else if (status.done) {
-                    return
+            return {
+                next () {
+                    while (true) {
+                        const status = fn(iterator.next())
+                        if (!status) {
+                            continue
+                        }
+                        return status
+                    }
                 }
-                yield status.value
             }
         }
     }
