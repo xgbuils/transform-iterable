@@ -22,6 +22,13 @@ module.exports = function (test, params) {
                 'must iterate over the values while the predicate returns true')
             st.end()
         })
+        t.test('drop while it is different to item', function (st) {
+            const result = new TransformIterable(fromOneToFive)
+                .dropWhile(e => e !== 3)
+            st.deepEqual([...result], [3, 4, 5],
+                'must drop until found the item')
+            st.end()
+        })
         t.test('dropWhile all', function (st) {
             const result = new TransformIterable(twoOneFiveFourThree)
                 .dropWhile(e => e <= 5)
@@ -36,7 +43,7 @@ module.exports = function (test, params) {
                 'must not dropWhile any value')
             st.end()
         })
-        t.test('chaining', function (st) {
+        t.test('chaining: drop 1 item, then 1 item and then 0 items', function (st) {
             const result = new TransformIterable(fromOneToFive) // (1 2 3 4 5)
                 .dropWhile(e => e === 1) // (2 3 4 5)
                 .dropWhile(e => e === 2) // (3 4 5)
