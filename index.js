@@ -1,22 +1,22 @@
+const SKIP = Symbol('SKIP')
+const STOP = Symbol('STOP')
+
 const iterCompose2 = (f, g) => () => {
     const tif = f()
     const tig = g()
     return x => {
         const y = tig(x)
-        return !y || y.done ? y : tif(y)
+        return y === SKIP || y === STOP ? y : tif(y)
     }
 }
 
-const take = n => (num = n) => s => num-- > 0 ? s : {done: true}
-const drop = n => (num = n) => s => num-- > 0 ? undefined : s
+const take = n => (num = n) => value => num-- > 0 ? value : STOP
+const drop = n => (num = n) => value => num-- > 0 ? SKIP : value
 
 const fns = {
-    map: f => () => ({value, done}) => ({
-        value: f(value),
-        done
-    }),
+    map: f => () => value => value === STOP ? value : f(value),
 
-    filter: f => () => s => s.done || f(s.value) ? s : undefined,
+    filter: f => () => value => value === STOP || f(value) ? value : SKIP,
 
     take,
 
@@ -25,11 +25,11 @@ const fns = {
     slice: (start, end) => iterCompose2(take(end - start), drop(start)),
 
     takeWhile: f => (taking = true) => {
-        return s => taking && f(s.value) ? s : (taking = false, {done: true})
+        return value => taking && value !== STOP && f(value) ? value : (taking = false, STOP)
     },
 
     dropWhile: f => (dropping = true) => {
-        return s => dropping && !s.done && f(s.value) ? undefined : (dropping = false, s)
+        return value => dropping && value !== STOP && f(value) ? SKIP : (dropping = false, value)
     }
 }
 
@@ -80,9 +80,13 @@ Object.defineProperties(TransformIterable.prototype, {
             return {
                 next () {
                     while (true) {
-                        const status = fn(iterator.next())
-                        if (status) {
-                            return status
+                        const s = iterator.next()
+                        const value = s.done ? STOP : s.value
+                        const newValue = fn(value)
+                        if (newValue === STOP) {
+                            return {done: true}
+                        } else if (newValue !== SKIP) {
+                            return {value: newValue}
                         }
                     }
                 }
