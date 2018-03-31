@@ -81,10 +81,9 @@ Object.defineProperties(TransformIterable.prototype, {
                 next () {
                     while (true) {
                         const status = fn(iterator.next())
-                        if (!status) {
-                            continue
+                        if (status) {
+                            return status
                         }
-                        return status
                     }
                 }
             }
