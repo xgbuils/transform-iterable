@@ -1,22 +1,50 @@
-const iterCompose2 = (f, g) => () => {
-    const tif = f()
-    const tig = g()
-    return x => {
-        const y = tig(x)
-        return !y || y.done ? y : tif(y)
+const iterCompose2 = (a, b) => {
+    return {
+        init () {
+            a.init()
+            b.init()
+        },
+        transform (x) {
+            const y = b.transform(x)
+            return !y || y.done ? y : a.transform(y)
+        }
     }
 }
 
-const take = n => (num = n) => s => num-- > 0 ? s : {done: true}
-const drop = n => (num = n) => s => num-- > 0 ? undefined : s
+const take = n => ({
+    init () {
+        this.n = n
+    },
+    transform (s) {
+        return this.n-- > 0 ? s : {done: true}
+    }
+})
+const drop = n => ({
+    init () {
+        this.n = n
+    },
+    transform (s) {
+        return this.n-- > 0 ? undefined : s
+    }
+})
 
 const fns = {
-    map: f => () => ({value, done}) => ({
-        value: f(value),
-        done
+    map: f => ({
+        init () {},
+        transform ({value, done}) {
+            return {
+                value: f(value),
+                done
+            }
+        }
     }),
 
-    filter: f => () => s => s.done || f(s.value) ? s : undefined,
+    filter: f => ({
+        init () {},
+        transform (s) {
+            return s.done || f(s.value) ? s : undefined
+        }
+    }),
 
     take,
 
@@ -24,13 +52,23 @@ const fns = {
 
     slice: (start, end) => iterCompose2(take(end - start), drop(start)),
 
-    takeWhile: f => (taking = true) => {
-        return s => taking && f(s.value) ? s : (taking = false, {done: true})
-    },
+    takeWhile: f => ({
+        init () {
+            this.taking = true
+        },
+        transform (s) {
+            return this.taking && f(s.value) ? s : (this.taking = false, {done: true})
+        }
+    }),
 
-    dropWhile: f => (dropping = true) => {
-        return s => dropping && !s.done && f(s.value) ? undefined : (dropping = false, s)
-    }
+    dropWhile: f => ({
+        init () {
+            this.dropping = true
+        },
+        transform (s) {
+            return this.dropping && !s.done && f(s.value) ? undefined : (this.dropping = false, s)
+        }
+    })
 }
 
 function TransformIterable (iterable) {
@@ -73,14 +111,15 @@ Object.defineProperties(TransformIterable.prototype, {
     [Symbol.iterator]: {
         value () {
             const iterator = this.iterable[Symbol.iterator]()
-            if (!this.fn) {
+            const fn = this.fn
+            if (!fn) {
                 return iterator
             }
-            const fn = this.fn()
+            fn.init()
             return {
                 next () {
                     while (true) {
-                        const status = fn(iterator.next())
+                        const status = fn.transform(iterator.next())
                         if (status) {
                             return status
                         }
@@ -91,14 +130,15 @@ Object.defineProperties(TransformIterable.prototype, {
     },
     toArray: {
         value () {
-            if (!this.fn) {
+            const fn = this.fn
+            if (!fn) {
                 return [...this.iterable]
             }
             const iterator = this.iterable[Symbol.iterator]()
-            const fn = this.fn()
+            fn.init()
             const array = []
             while (true) {
-                const status = fn(iterator.next())
+                const status = fn.transform(iterator.next())
                 if (status) {
                     if (status.done) {
                         return array
