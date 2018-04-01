@@ -19,6 +19,13 @@ module.exports = function (test, params) {
                 'must return a new iterable with transformed values')
             st.end()
         })
+        t.test('non-empty string (toArray)', function (st) {
+            const result = new TransformIterable(string).map(double)
+            const expected = [...string].map(double)
+            st.deepEqual(result.toArray(), expected,
+                'must return a new iterable with transformed values')
+            st.end()
+        })
         t.test('chaining', function (st) {
             const result = new TransformIterable(numberIterable)
                 .map(double)

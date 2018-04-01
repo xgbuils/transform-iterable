@@ -88,6 +88,25 @@ Object.defineProperties(TransformIterable.prototype, {
                 }
             }
         }
+    },
+    toArray: {
+        value () {
+            if (!this.fn) {
+                return [...this.iterable]
+            }
+            const iterator = this.iterable[Symbol.iterator]()
+            const fn = this.fn()
+            const array = []
+            while (true) {
+                const status = fn(iterator.next())
+                if (status) {
+                    if (status.done) {
+                        return array
+                    }
+                    array.push(status.value)
+                }
+            }
+        }
     }
 })
 

@@ -36,6 +36,13 @@ module.exports = function (test, params) {
                 'must behave like array slice')
             st.end()
         })
+        t.test('drop some elements (toArray)', function (st) {
+            const result = new TransformIterable(numberIterable).drop(2)
+            const expected = [...numberIterable].slice(2)
+            st.deepEqual(result.toArray(), expected,
+                'must behave like array slice')
+            st.end()
+        })
         t.test('chaining', function (st) {
             const result = new TransformIterable(numberIterable) // (1 2 3 4 5 6)
                 .drop(1) // (2 3 4 5 6)

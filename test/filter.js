@@ -19,6 +19,15 @@ module.exports = function (test, params) {
                 'must filter the values that predicate returns true')
             st.end()
         })
+        t.test('filter some values (toArray)', function (st) {
+            const result = new TransformIterable(iterable)
+                .filter(e => e % 2 === 0)
+            const expected = [...iterable]
+                .filter(e => e % 2 === 0)
+            st.deepEqual(result.toArray(), expected,
+                'must filter the values that predicate returns true')
+            st.end()
+        })
         t.test('filter all', function (st) {
             const result = new TransformIterable(iterable)
                 .filter(e => e <= 5)

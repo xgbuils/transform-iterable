@@ -23,6 +23,15 @@ module.exports = function (test, params) {
                 'must iterate over the values while the predicate returns true')
             st.end()
         })
+        t.test('takeWhile some values toArray()', function (st) {
+            const result = new TransformIterable(twoOneFiveFourThree)
+                .takeWhile(e => e % 2 === 0)
+
+            const expected = [2]
+            st.deepEqual(result.toArray(), expected,
+                'must iterate over the values while the predicate returns true')
+            st.end()
+        })
         t.test('takeWhile all', function (st) {
             const result = new TransformIterable(twoOneFiveFourThree)
                 .takeWhile(e => e <= 5)

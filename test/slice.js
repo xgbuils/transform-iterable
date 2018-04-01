@@ -16,6 +16,12 @@ module.exports = function (test, params) {
                 'must be equivalent to start to 0')
             st.end()
         })
+        t.test('negative start (toArray)', function (st) {
+            const result = new TransformIterable(string).slice(-3, 6)
+            st.deepEqual(result.toArray(), [...string],
+                'must be equivalent to start to 0')
+            st.end()
+        })
         t.test('negative end', function (st) {
             const result = new TransformIterable(numberIterable).slice(0, -6)
             st.deepEqual([...result], [],

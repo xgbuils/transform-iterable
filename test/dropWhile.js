@@ -29,6 +29,13 @@ module.exports = function (test, params) {
                 'must drop until found the item')
             st.end()
         })
+        t.test('drop while it is different to item (toArray)', function (st) {
+            const result = new TransformIterable(fromOneToFive)
+                .dropWhile(e => e !== 3)
+            st.deepEqual(result.toArray(), [3, 4, 5],
+                'must drop until found the item')
+            st.end()
+        })
         t.test('dropWhile all', function (st) {
             const result = new TransformIterable(twoOneFiveFourThree)
                 .dropWhile(e => e <= 5)

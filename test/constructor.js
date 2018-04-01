@@ -15,6 +15,12 @@ module.exports = function (test, params) {
                 'must return an iterable with the same values')
             st.end()
         })
+        t.test('non-empty iterable (toArray)', function (st) {
+            const result = new TransformIterable(iterable)
+            st.deepEqual(result.toArray(), [...iterable],
+                'must return an iterable with the same values')
+            st.end()
+        })
 
         t.test('empty string', function (st) {
             const result = new TransformIterable('')
@@ -25,6 +31,12 @@ module.exports = function (test, params) {
         t.test('non-empty typed iterable', function (st) {
             const result = new TransformIterable(new Int8Array(iterable))
             st.deepEqual([...result], [...iterable],
+                'must return an iterable with the same values')
+            st.end()
+        })
+        t.test('non-empty typed iterable (toArray)', function (st) {
+            const result = new TransformIterable(new Int8Array(iterable))
+            st.deepEqual(result.toArray(), [...iterable],
                 'must return an iterable with the same values')
             st.end()
         })
