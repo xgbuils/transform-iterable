@@ -1,6 +1,8 @@
 const iterCompose2 = (a, b) => {
+    const method = a.init && a.init.bind(a) || b.init && b.init.bind(b)
+    const composeInit = a.init && b.init
     return {
-        init () {
+        init: !composeInit ? method : () => {
             a.init()
             b.init()
         },
@@ -30,7 +32,6 @@ const drop = n => ({
 
 const fns = {
     map: f => ({
-        init () {},
         transform ({value, done}) {
             return {
                 value: f(value),
@@ -40,7 +41,6 @@ const fns = {
     }),
 
     filter: f => ({
-        init () {},
         transform (s) {
             return s.done || f(s.value) ? s : undefined
         }
@@ -115,7 +115,7 @@ Object.defineProperties(TransformIterable.prototype, {
             if (!fn) {
                 return iterator
             }
-            fn.init()
+            fn.init && fn.init()
             return {
                 next () {
                     while (true) {
@@ -135,7 +135,7 @@ Object.defineProperties(TransformIterable.prototype, {
                 return [...this.iterable]
             }
             const iterator = this.iterable[Symbol.iterator]()
-            fn.init()
+            fn.init && fn.init()
             const array = []
             while (true) {
                 const status = fn.transform(iterator.next())
