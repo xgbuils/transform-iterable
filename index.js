@@ -1,8 +1,6 @@
 const iterCompose2 = (a, b) => {
-    const method = a.init && a.init.bind(a) || b.init && b.init.bind(b)
-    const composeInit = a.init && b.init
     return {
-        init: !composeInit ? method : () => {
+        init: !a.init ? b.init.bind(b) : () => {
             a.init()
             b.init()
         },
@@ -73,6 +71,12 @@ const fns = {
 
 function TransformIterable (iterable) {
     this.iterable = iterable
+    this.fn = {
+        init () {},
+        transform (s) {
+            return s
+        }
+    }
 }
 
 function methodGenerator (methodName) {
@@ -112,10 +116,7 @@ Object.defineProperties(TransformIterable.prototype, {
         value () {
             const iterator = this.iterable[Symbol.iterator]()
             const fn = this.fn
-            if (!fn) {
-                return iterator
-            }
-            fn.init && fn.init()
+            fn.init()
             return {
                 next () {
                     while (true) {
@@ -131,11 +132,8 @@ Object.defineProperties(TransformIterable.prototype, {
     toArray: {
         value () {
             const fn = this.fn
-            if (!fn) {
-                return [...this.iterable]
-            }
             const iterator = this.iterable[Symbol.iterator]()
-            fn.init && fn.init()
+            fn.init()
             const array = []
             while (true) {
                 const status = fn.transform(iterator.next())
