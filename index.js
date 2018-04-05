@@ -1,86 +1,26 @@
-class Transiter {
-    constructor (init, transform) {
-        this.init = init
-        this.transform = transform
+const arrayOf = require('immutable-array.of')
+const push = require('immutable-array.push')
+const reduce = require('immutable-array.reduce')
+
+const iterCompose2 = (f, g) => () => {
+    const tif = f()
+    const tig = g()
+    return x => {
+        const y = tig(x)
+        return !y || y.done ? y : tif(y)
     }
 }
 
-const iterCompose2 = (a, b) => {
-    return new Transiter(function () {
-        a.init()
-        b.init()
-    }, function (x) {
-        const y = b.transform(x)
-        return !y || y.done ? y : a.transform(y)
-    })
-}
-
-class ITake extends Transiter {
-    constructor (n) {
-        super(function () {
-            this.n = n
-        }, function (s) {
-            return this.n-- > 0 ? s : {done: true}
-        })
-    }
-}
-
-class IDrop extends Transiter {
-    constructor (n) {
-        super(function () {
-            this.n = n
-        }, function (s) {
-            return this.n-- > 0 ? undefined : s
-        })
-    }
-}
-
-class IMap extends Transiter {
-    constructor (f) {
-        super(() => {}, function ({value, done}) {
-            return {
-                value: f(value),
-                done
-            }
-        })
-    }
-}
-
-class IFilter extends Transiter {
-    constructor (f) {
-        super(() => {}, function (s) {
-            return s.done || f(s.value) ? s : undefined
-        })
-    }
-}
-
-class ITakeWhile extends Transiter {
-    constructor (f) {
-        super(function () {
-            this.taking = true
-        }, function (s) {
-            return this.taking && f(s.value) ? s : (this.taking = false, {done: true})
-        })
-    }
-}
-
-class IDropWhile extends Transiter {
-    constructor (f) {
-        super(function () {
-            this.dropping = true
-        }, function (s) {
-            return this.dropping && !s.done && f(s.value) ? undefined : (this.dropping = false, s)
-        })
-    }
-}
-
-const take = n => new ITake(n)
-const drop = n => new IDrop(n)
+const take = n => (num = n) => s => num-- > 0 ? s : {done: true}
+const drop = n => (num = n) => s => num-- > 0 ? undefined : s
 
 const fns = {
-    map: f => new IMap(f),
+    map: f => () => ({value, done}) => ({
+        value: f(value),
+        done
+    }),
 
-    filter: f => new IFilter(f),
+    filter: f => () => s => s.done || f(s.value) ? s : undefined,
 
     take,
 
@@ -88,24 +28,44 @@ const fns = {
 
     slice: (start, end) => iterCompose2(take(end - start), drop(start)),
 
-    takeWhile: f => new ITakeWhile(f),
+    takeWhile: f => (taking = true) => {
+        return s => taking && f(s.value) ? s : (taking = false, {done: true})
+    },
 
-    dropWhile: f => new IDropWhile(f)
+    dropWhile: f => (dropping = true) => {
+        return s => dropping && !s.done && f(s.value) ? undefined : (dropping = false, s)
+    }
 }
 
 function TransformIterable (iterable) {
     this.iterable = iterable
+    this.transiters = arrayOf([])
 }
 
 function methodGenerator (methodName) {
     return function (...args) {
-        const g = fns[methodName](...args)
-        const fn = this.fn ? iterCompose2(g, this.fn) : g
         const obj = Object.create(this.constructor.prototype)
-        obj.fn = fn
+        obj.transiters = push(fns[methodName](...args), this.transiters)
         obj.iterable = this.iterable
         return obj
     }
+}
+
+function getTransforms (transiters) {
+    return reduce(function (transforms, transiter) {
+        transforms.push(transiter())
+        return transforms
+    }, [], transiters)
+}
+
+function applyTransforms (transforms, status) {
+    for (let i = 0; i < transforms.length; ++i) {
+        status = transforms[i](status)
+        if (!status || status.done) {
+            return status
+        }
+    }
+    return status
 }
 
 Object.defineProperties(TransformIterable.prototype, {
@@ -133,15 +93,11 @@ Object.defineProperties(TransformIterable.prototype, {
     [Symbol.iterator]: {
         value () {
             const iterator = this.iterable[Symbol.iterator]()
-            const fn = this.fn
-            if (!fn) {
-                return iterator
-            }
-            fn.init()
+            const transforms = getTransforms(this.transiters)
             return {
                 next () {
                     while (true) {
-                        const status = fn.transform(iterator.next())
+                        const status = applyTransforms(transforms, iterator.next())
                         if (status) {
                             return status
                         }
@@ -152,15 +108,14 @@ Object.defineProperties(TransformIterable.prototype, {
     },
     toArray: {
         value () {
-            const fn = this.fn
-            if (!fn) {
+            if (this.transiters.length === 0) {
                 return [...this.iterable]
             }
             const iterator = this.iterable[Symbol.iterator]()
-            fn.init()
+            const transforms = getTransforms(this.transiters)
             const array = []
             while (true) {
-                const status = fn.transform(iterator.next())
+                const status = applyTransforms(transforms, iterator.next())
                 if (status) {
                     if (status.done) {
                         return array
