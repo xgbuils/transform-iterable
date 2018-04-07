@@ -1,6 +1,6 @@
 {
   "name": "transform-iterable",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "iterable that provides transformation methods for array iterables",
   "main": "index.js",
   "scripts": {
@@ -37,10 +37,5 @@
   },
   "pre-commit": {
     "run": "test"
-  },
-  "dependencies": {
-    "immutable-array.of": "^0.1.0",
-    "immutable-array.push": "^0.1.0",
-    "immutable-array.reduce": "^0.1.0"
   }
 }
