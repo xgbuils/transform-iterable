@@ -35,18 +35,17 @@ const quickCompose = function (t) {
         : new Transiter(this.init, this.transform, last.type, result)
 }
 
-class Transiter {
-    constructor (init, transform, type, last) {
-        this.init = init
-        this.transform = transform
-        this.type = type
-        this.last = last || this
-    }
-    compose (t) {
-        return t.last.type === this.type
-            ? quickCompose.call(this, t)
-            : defaultCompose.call(this, t)
-    }
+function Transiter (init, transform, type, last) {
+    this.init = init
+    this.transform = transform
+    this.type = type
+    this.last = last || this
+}
+
+Transiter.prototype.compose = function (t) {
+    return t.last.type === this.type
+        ? quickCompose.call(this, t)
+        : defaultCompose.call(this, t)
 }
 
 function sliceInit () {
@@ -63,13 +62,12 @@ function sliceTransform (s) {
     return {done: true}
 }
 
-class ISlice extends Transiter {
-    constructor (m, n) {
-        super(sliceInit, sliceTransform, 'slice')
-        this.start = m < 0 ? 0 : m
-        this.end = n < 0 ? 0 : n
-    }
+function ISlice (m, n) {
+    Transiter.call(this, sliceInit, sliceTransform, 'slice')
+    this.start = m < 0 ? 0 : m
+    this.end = n < 0 ? 0 : n
 }
+ISlice.prototype = Object.create(Transiter.prototype)
 
 function noop () {}
 
@@ -80,23 +78,21 @@ function mapTransform ({value, done}) {
     }
 }
 
-class IMap extends Transiter {
-    constructor (f) {
-        super(noop, mapTransform, 'map')
-        this.f = f
-    }
+function IMap (f) {
+    Transiter.call(this, noop, mapTransform, 'map')
+    this.f = f
 }
+IMap.prototype = Object.create(Transiter.prototype)
 
 function filterTransform (s) {
     return s.done || this.f(s.value) ? s : undefined
 }
 
-class IFilter extends Transiter {
-    constructor (f) {
-        super(noop, filterTransform, 'filter')
-        this.f = f
-    }
+function IFilter (f) {
+    Transiter.call(this, noop, filterTransform, 'filter')
+    this.f = f
 }
+IFilter.prototype = Object.create(Transiter.prototype)
 
 function takeInit () {
     this.taking = true
@@ -106,12 +102,11 @@ function takeTransform (s) {
     return this.taking && this.f(s.value) ? s : (this.taking = false, {done: true})
 }
 
-class ITakeWhile extends Transiter {
-    constructor (f) {
-        super(takeInit, takeTransform, 'takeWhile')
-        this.f = f
-    }
+function ITakeWhile (f) {
+    Transiter.call(this, takeInit, takeTransform, 'takeWhile')
+    this.f = f
 }
+ITakeWhile.prototype = Object.create(Transiter.prototype)
 
 function dropWhileInit () {
     this.dropping = true
@@ -121,12 +116,11 @@ function dropWhileTransform (s) {
     return this.dropping && !s.done && this.f(s.value) ? undefined : (this.dropping = false, s)
 }
 
-class IDropWhile extends Transiter {
-    constructor (f) {
-        super(dropWhileInit, dropWhileTransform, 'dropWhile')
-        this.f = f
-    }
+function IDropWhile (f) {
+    Transiter.call(this, dropWhileInit, dropWhileTransform, 'dropWhile')
+    this.f = f
 }
+IDropWhile.prototype = Object.create(Transiter.prototype)
 
 function TransformIterable (iterable) {
     this.iterable = iterable
