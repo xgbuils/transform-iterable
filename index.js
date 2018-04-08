@@ -128,29 +128,13 @@ class IDropWhile extends Transiter {
     }
 }
 
-const fns = {
-    map: f => new IMap(f),
-
-    filter: f => new IFilter(f),
-
-    take: n => new ISlice(0, n),
-
-    drop: n => new ISlice(n, Infinity),
-
-    slice: (start, end) => new ISlice(start, end),
-
-    takeWhile: f => new ITakeWhile(f),
-
-    dropWhile: f => new IDropWhile(f)
-}
-
 function TransformIterable (iterable) {
     this.iterable = iterable
 }
 
-function methodGenerator (methodName) {
+function methodGenerator (transiter) {
     return function (...args) {
-        const g = fns[methodName](...args)
+        const g = transiter(...args)
         const fn = this.fn ? this.fn.compose(g) : g
         const obj = Object.create(this.constructor.prototype)
         obj.fn = fn
@@ -161,25 +145,25 @@ function methodGenerator (methodName) {
 
 Object.defineProperties(TransformIterable.prototype, {
     drop: {
-        value: methodGenerator('drop')
+        value: methodGenerator(n => new ISlice(n, Infinity))
     },
     take: {
-        value: methodGenerator('take')
+        value: methodGenerator(n => new ISlice(0, n))
     },
     slice: {
-        value: methodGenerator('slice')
+        value: methodGenerator((start, end) => new ISlice(start, end))
     },
     map: {
-        value: methodGenerator('map')
+        value: methodGenerator(f => new IMap(f))
     },
     filter: {
-        value: methodGenerator('filter')
+        value: methodGenerator(f => new IFilter(f))
     },
     dropWhile: {
-        value: methodGenerator('dropWhile')
+        value: methodGenerator(f => new IDropWhile(f))
     },
     takeWhile: {
-        value: methodGenerator('takeWhile')
+        value: methodGenerator(f => new ITakeWhile(f))
     },
     [Symbol.iterator]: {
         value () {
