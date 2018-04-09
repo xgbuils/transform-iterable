@@ -35,18 +35,19 @@ const quickCompose = function (t) {
         : new Transiter(this.init, this.transform, last.type, result)
 }
 
+function compose (t) {
+    return t.last.type === this.type
+        ? quickCompose.call(this, t)
+        : defaultCompose.call(this, t)
+}
+
 function Transiter (init, transform, type, last) {
     this.init = init
     this.transform = transform
     this.type = type
     this.last = last || this
 }
-
-Transiter.prototype.compose = function (t) {
-    return t.last.type === this.type
-        ? quickCompose.call(this, t)
-        : defaultCompose.call(this, t)
-}
+Transiter.prototype.compose = compose
 
 function sliceInit () {
     this.m = this.start
@@ -67,7 +68,7 @@ function ISlice (m, n) {
     this.start = m < 0 ? 0 : m
     this.end = n < 0 ? 0 : n
 }
-ISlice.prototype = Object.create(Transiter.prototype)
+ISlice.prototype.compose = compose
 
 function noop () {}
 
@@ -82,7 +83,7 @@ function IMap (f) {
     Transiter.call(this, noop, mapTransform, 'map')
     this.f = f
 }
-IMap.prototype = Object.create(Transiter.prototype)
+IMap.prototype.compose = compose
 
 function filterTransform (s) {
     return s.done || this.f(s.value) ? s : undefined
@@ -92,7 +93,7 @@ function IFilter (f) {
     Transiter.call(this, noop, filterTransform, 'filter')
     this.f = f
 }
-IFilter.prototype = Object.create(Transiter.prototype)
+IFilter.prototype.compose = compose
 
 function takeInit () {
     this.taking = true
@@ -106,7 +107,7 @@ function ITakeWhile (f) {
     Transiter.call(this, takeInit, takeTransform, 'takeWhile')
     this.f = f
 }
-ITakeWhile.prototype = Object.create(Transiter.prototype)
+ITakeWhile.prototype.compose = compose
 
 function dropWhileInit () {
     this.dropping = true
@@ -120,7 +121,7 @@ function IDropWhile (f) {
     Transiter.call(this, dropWhileInit, dropWhileTransform, 'dropWhile')
     this.f = f
 }
-IDropWhile.prototype = Object.create(Transiter.prototype)
+IDropWhile.prototype.compose = compose
 
 function TransformIterable (iterable) {
     this.iterable = iterable
